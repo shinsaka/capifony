@@ -397,241 +397,239 @@ namespace :symfony do
 
     desc "Generate model lib form and filters classes based on your schema"
     task :build_classes do
-      run "php #{latest_release}/symfony propel:build --model --env=#{symfony_env_prod}"
-      run "php #{latest_release}/symfony propel:build --forms --env=#{symfony_env_prod}"
-      run "php #{latest_release}/symfony propel:build --filters --env=#{symfony_env_prod}"
+    run "php #{latest_release}/symfony propel:build --model --env=#{symfony_env_prod}"
+    run "php #{latest_release}/symfony propel:build --forms --env=#{symfony_env_prod}"
+    run "php #{latest_release}/symfony propel:build --filters --env=#{symfony_env_prod}"
     end
 
     desc "Generate code & database based on your schema"
     task :build_all do
-      if Capistrano::CLI.ui.agree("Do you really want to rebuild #{symfony_env_prod}'s database? (y/N)")
-        run "cd #{latest_release} && #{php_bin} ./symfony propel:build --sql --db --no-confirmation --env=#{symfony_env_prod}"
-      end
+    if Capistrano::CLI.ui.agree("Do you really want to rebuild #{symfony_env_prod}'s database? (y/N)")
+    run "cd #{latest_release} && #{php_bin} ./symfony propel:build --sql --db --no-confirmation --env=#{symfony_env_prod}"
+    end
     end
 
     desc "Generate code & database based on your schema & load fixtures"
     task :build_all_and_load do
-      if Capistrano::CLI.ui.agree("Do you really want to rebuild #{symfony_env_prod}'s database and load #{symfony_env_prod}'s fixtures? (y/N)")
-        run "cd #{latest_release} && #{php_bin} ./symfony propel:build --sql --db --and-load --no-confirmation --env=#{symfony_env_prod}"
-      end
+    if Capistrano::CLI.ui.agree("Do you really want to rebuild #{symfony_env_prod}'s database and load #{symfony_env_prod}'s fixtures? (y/N)")
+    run "cd #{latest_release} && #{php_bin} ./symfony propel:build --sql --db --and-load --no-confirmation --env=#{symfony_env_prod}"
+    end
     end
 
     desc "Generate sql & database based on your schema"
     task :build_db do
-      if Capistrano::CLI.ui.agree("Do you really want to rebuild #{symfony_env_prod}'s database? (y/N)")
-        run "cd #{latest_release} && #{php_bin} ./symfony propel:build --sql --db --no-confirmation --env=#{symfony_env_prod}"
-      end
+    if Capistrano::CLI.ui.agree("Do you really want to rebuild #{symfony_env_prod}'s database? (y/N)")
+    run "cd #{latest_release} && #{php_bin} ./symfony propel:build --sql --db --no-confirmation --env=#{symfony_env_prod}"
+    end
     end
 
     desc "Generate sql & database based on your schema & load fixtures"
     task :build_db_and_load do
-      if Capistrano::CLI.ui.agree("Do you really want to rebuild #{symfony_env_prod}'s database and load #{symfony_env_prod}'s fixtures? (y/N)")
-        run "cd #{latest_release} && #{php_bin} ./symfony propel:build --sql --db --and-load --no-confirmation --env=#{symfony_env_prod}"
-      end
+    if Capistrano::CLI.ui.agree("Do you really want to rebuild #{symfony_env_prod}'s database and load #{symfony_env_prod}'s fixtures? (y/N)")
+    run "cd #{latest_release} && #{php_bin} ./symfony propel:build --sql --db --and-load --no-confirmation --env=#{symfony_env_prod}"
     end
-  end
-end
+    end
+    end
+    end
 
-namespace :database do
-  namespace :dump do
+    namespace :database do
+    namespace :dump do
     desc "Dump remote database"
     task :remote do
-      filename  = "#{application}.remote_dump.#{Time.now.to_i}.sql.gz"
-      file      = "/tmp/#{filename}"
-      sqlfile   = "#{application}_dump.sql"
-      config    = ""
+    filename  = "#{application}.remote_dump.#{Time.now.to_i}.sql.gz"
+    file      = "/tmp/#{filename}"
+    sqlfile   = "#{application}_dump.sql"
+    config    = ""
 
-      run "cat #{shared_path}/config/databases.yml" do |ch, st, data|
-        config = load_database_config data, symfony_env_prod
-      end
+    run "cat #{shared_path}/config/databases.yml" do |ch, st, data|
+    config = load_database_config data, symfony_env_prod
+    end
 
-      case config['type']
-      when 'mysql'
-        run "mysqldump -u#{config['user']} --password='#{config['pass']}' #{config['db']} | gzip -c > #{file}" do |ch, stream, data|
-          puts data
-        end
-      when 'pgsql'
-        run "pg_dump -U #{config['user']} --password='#{config['pass']}' #{config['db']} | gzip -c > #{file}" do |ch, stream, data|
-          puts data
-        end
-      end
+    case config['type']
+    when 'mysql'
+    run "mysqldump -u#{config['user']} --password='#{config['pass']}' #{config['db']} | gzip -c > #{file}" do |ch, stream, data|
+    puts data
+    end
+    when 'pgsql'
+    run "pg_dump -U #{config['user']} --password='#{config['pass']}' #{config['db']} | gzip -c > #{file}" do |ch, stream, data|
+    puts data
+    end
+    end
 
-      require "FileUtils"
-      FileUtils.mkdir_p("backups")
-      get file, "backups/#{filename}"
-      begin
-        FileUtils.ln_sf(filename, "backups/#{application}.remote_dump.latest.sql.gz")
-      rescue NotImplementedError # hack for windows which doesnt support symlinks
-        FileUtils.cp_r("backups/#{filename}", "backups/#{application}.remote_dump.latest.sql.gz")
-      end
-      run "rm #{file}"
+    require "FileUtils"
+    FileUtils.mkdir_p("backups")
+    get file, "backups/#{filename}"
+    begin
+    FileUtils.ln_sf(filename, "backups/#{application}.remote_dump.latest.sql.gz")
+    rescue NotImplementedError # hack for windows which doesnt support symlinks
+    FileUtils.cp_r("backups/#{filename}", "backups/#{application}.remote_dump.latest.sql.gz")
+    end
+    run "rm #{file}"
     end
 
     desc "Dump local database"
     task :local do
-      filename  = "#{application}.local_dump.#{Time.now.to_i}.sql.gz"
-      tmpfile   = "backups/#{application}_dump_tmp.sql"
-      file      = "backups/#{filename}"
-      config    = load_database_config IO.read('config/databases.yml'), symfony_env_local
-      sqlfile   = "#{application}_dump.sql"
+    filename  = "#{application}.local_dump.#{Time.now.to_i}.sql.gz"
+    tmpfile   = "backups/#{application}_dump_tmp.sql"
+    file      = "backups/#{filename}"
+    config    = load_database_config IO.read('config/databases.yml'), symfony_env_local
+    sqlfile   = "#{application}_dump.sql"
 
-      require "FileUtils"
-      FileUtils::mkdir_p("backups")
-      case config['type']
-      when 'mysql'
-        `mysqldump -u#{config['user']} --password=\"#{config['pass']}\" #{config['db']} > #{tmpfile}`
-      when 'pgsql'
-        `pg_dump -U #{config['user']} --password=\"#{config['pass']}\" #{config['db']} > #{tmpfile}`
-      end
-      File.open(tmpfile, "r+") do |f|
-        gz = Zlib::GzipWriter.open(file)
-        while (line = f.gets)
-          gz << line
-        end
-        gz.flush
-        gz.close
-      end
-
-      begin
-        FileUtils.ln_sf(filename, "backups/#{application}.local_dump.latest.sql.gz")
-      rescue NotImplementedError # hack for windows which doesnt support symlinks
-        FileUtils.cp_r("backups/#{filename}", "backups/#{application}.local_dump.latest.sql.gz")
-      end
-      FileUtils.rm(tmpfile)
+    require "FileUtils"
+    FileUtils::mkdir_p("backups")
+    case config['type']
+    when 'mysql'
+    `mysqldump -u#{config['user']} --password=\"#{config['pass']}\" #{config['db']} > #{tmpfile}`
+    when 'pgsql'
+    `pg_dump -U #{config['user']} --password=\"#{config['pass']}\" #{config['db']} > #{tmpfile}`
     end
+  File.open(tmpfile, "r+") do |f|
+  gz = Zlib::GzipWriter.open(file)
+while (line = f.gets)
+  gz << line
+  end
+  gz.flush
+  gz.close
+  end
+
+  begin
+  FileUtils.ln_sf(filename, "backups/#{application}.local_dump.latest.sql.gz")
+  rescue NotImplementedError # hack for windows which doesnt support symlinks
+  FileUtils.cp_r("backups/#{filename}", "backups/#{application}.local_dump.latest.sql.gz")
+  end
+FileUtils.rm(tmpfile)
+  end
   end
 
   namespace :move do
-    desc "Dump remote database, download it to local & populate here"
-    task :to_local do
-      filename  = "#{application}.remote_dump.latest.sql.gz"
-      config    = load_database_config IO.read('config/databases.yml'), symfony_env_local
-      sqlfile   = "#{application}_dump.sql"
+  desc "Dump remote database, download it to local & populate here"
+  task :to_local do
+  filename  = "#{application}.remote_dump.latest.sql.gz"
+  config    = load_database_config IO.read('config/databases.yml'), symfony_env_local
+  sqlfile   = "#{application}_dump.sql"
 
-      database.dump.remote
+  database.dump.remote
 
-      require "FileUtils"
-      f = File.new("backups/#{sqlfile}", "a+")
-      require "zlib"
-      gz = Zlib::GzipReader.new(File.open("backups/#{filename}", "r"))
-      f << gz.read
-      f.close
-      
-      case config['type']
-      when 'mysql'
-        `mysql -u#{config['user']} --password=\"#{config['pass']}\" #{config['db']} < backups/#{sqlfile}`
-      when 'pgsql'
-        `psql -U #{config['user']} --password=\"#{config['pass']}\" #{config['db']} < backups/#{sqlfile}`
-      end
-      FileUtils.rm("backups/#{sqlfile}")
-    end
+  require "FileUtils"
+  f = File.new("backups/#{sqlfile}", "a+")
+  require "zlib"
+  gz = Zlib::GzipReader.new(File.open("backups/#{filename}", "r"))
+  f << gz.read
+  f.close
 
-    desc "Dump local database, load it to remote & populate there"
-    task :to_remote do
-      filename  = "#{application}.local_dump.latest.sql.gz"
-      file      = "backups/#{filename}"
-      sqlfile   = "#{application}_dump.sql"
-      config    = ""
-
-      database.dump.local
-
-      upload(file, "/tmp/#{filename}", :via => :scp)
-      run "gunzip -c /tmp/#{filename} > /tmp/#{sqlfile}"
-
-      run "cat #{shared_path}/config/databases.yml" do |ch, st, data|
-        config = load_database_config data, symfony_env_prod
-      end
-
-      case config['type']
-      when 'mysql'
-        run "mysql -u#{config['user']} --password='#{config['pass']}' #{config['db']} < /tmp/#{sqlfile}" do |ch, stream, data|
-          puts data
-        end
-      when 'pgsql'
-        run "psql -U #{config['user']} --password='#{config['pass']}' #{config['db']} < /tmp/#{sqlfile}" do |ch, stream, data|
-          puts data
-        end
-      end
-
-      run "rm /tmp/#{filename}"
-      run "rm /tmp/#{sqlfile}"
-    end
+  case config['type']
+  when 'mysql'
+  `mysql -u#{config['user']} --password=\"#{config['pass']}\" #{config['db']} < backups/#{sqlfile}`
+  when 'pgsql'
+  `psql -U #{config['user']} --password=\"#{config['pass']}\" #{config['db']} < backups/#{sqlfile}`
   end
-end
+  FileUtils.rm("backups/#{sqlfile}")
+  end
 
-namespace :shared do
+  desc "Dump local database, load it to remote & populate there"
+  task :to_remote do
+  filename  = "#{application}.local_dump.latest.sql.gz"
+  file      = "backups/#{filename}"
+  sqlfile   = "#{application}_dump.sql"
+  config    = ""
+
+  database.dump.local
+
+  upload(file, "/tmp/#{filename}", :via => :scp)
+  run "gunzip -c /tmp/#{filename} > /tmp/#{sqlfile}"
+
+  run "cat #{shared_path}/config/databases.yml" do |ch, st, data|
+  config = load_database_config data, symfony_env_prod
+  end
+
+  case config['type']
+  when 'mysql'
+  run "mysql -u#{config['user']} --password='#{config['pass']}' #{config['db']} < /tmp/#{sqlfile}" do |ch, stream, data|
+  puts data
+  end
+  when 'pgsql'
+  run "psql -U #{config['user']} --password='#{config['pass']}' #{config['db']} < /tmp/#{sqlfile}" do |ch, stream, data|
+  puts data
+  end
+  end
+
+  run "rm /tmp/#{filename}"
+  run "rm /tmp/#{sqlfile}"
+  end
+  end
+  end
+
+  namespace :shared do
   namespace :databases do
-    desc "Download config/databases.yml from remote server"
-    task :to_local do
-      download("#{shared_path}/config/databases.yml", "config/databases.yml", :via => :scp)
-    end
+  desc "Download config/databases.yml from remote server"
+  task :to_local do
+  download("#{shared_path}/config/databases.yml", "config/databases.yml", :via => :scp)
+  end
 
-    desc "Upload config/databases.yml to remote server"
-    task :to_remote do
-      upload("config/databases.yml", "#{shared_path}/config/databases.yml", :via => :scp)
-    end
+  desc "Upload config/databases.yml to remote server"
+  task :to_remote do
+  upload("config/databases.yml", "#{shared_path}/config/databases.yml", :via => :scp)
+  end
   end
 
   namespace :log do
-    desc "Download all logs from remote folder to local one"
-    task :to_local do
-      download("#{shared_path}/log", "./", :via => :scp, :recursive => true)
-    end
+  desc "Download all logs from remote folder to local one"
+  task :to_local do
+  download("#{shared_path}/log", "./", :via => :scp, :recursive => true)
+  end
 
-    desc "Upload all logs from local folder to remote one"
-    task :to_remote do
-      upload("log", "#{shared_path}/", :via => :scp, :recursive => true)
-    end
+  desc "Upload all logs from local folder to remote one"
+  task :to_remote do
+  upload("log", "#{shared_path}/", :via => :scp, :recursive => true)
+  end
   end
 
   namespace :uploads do
-    desc "Download all files from remote web/uploads folder to local one"
-    task :to_local do
-      download("#{shared_path}/web/uploads", "web", :via => :scp, :recursive => true)
-    end
+  desc "Download all files from remote web/uploads folder to local one"
+  task :to_local do
+  download("#{shared_path}/web/uploads", "web", :via => :scp, :recursive => true)
+  end
 
-    desc "Upload all files from local web/uploads folder to remote one"
-    task :to_remote do
-      upload("web/uploads", "#{shared_path}/web", :via => :scp, :recursive => true)
-    end
+  desc "Upload all files from local web/uploads folder to remote one"
+  task :to_remote do
+  upload("web/uploads", "#{shared_path}/web", :via => :scp, :recursive => true)
+  end
   end
 
   namespace :symfony do
-    desc "Downloads symfony framework to shared directory"
-    task :download do 
-      prompt_with_default(:version, symfony_version)
-  
-      run <<-CMD
-        if [ ! -d #{shared_path}/symfony-#{version} ]; then
-          wget -q http://www.symfony-project.org/get/symfony-#{version}.tgz -O- | tar -zxf - -C #{shared_path};
-        fi
-      CMD
-    end
+  desc "Downloads symfony framework to shared directory"
+  task :download do 
+prompt_with_default(:version, symfony_version)
+
+  run <<-CMD
+  if [ ! -d #{shared_path}/symfony-#{version} ]; then
+  wget -q http://www.symfony-project.org/get/symfony-#{version}.tgz -O- | tar -zxf - -C #{shared_path};
+  fi
+  CMD
   end
-end
+  end
+  end
 
 # After setup
-after "deploy:setup" do
+  after "deploy:setup" do
   if use_shared_symfony
-    shared.symfony.download
+  shared.symfony.download
   end
-end
+  end
 
 # Before finalizing update
-before "deploy:finalize_update" do
+  before "deploy:finalize_update" do
   if use_shared_symfony
-    symfony.create_lib_symlink
+  symfony.create_lib_symlink
   end
-end
+  end
 
 # After finalizing update:
-after "deploy:finalize_update" do
+  after "deploy:finalize_update" do
   if use_orm
-    symfony.orm.setup                     # 1. Ensure that ORM is configured
-    symfony.orm.build_classes             # 2. (Re)build the model
+  symfony.orm.setup                     # 1. Ensure that ORM is configured
   end
   symfony.cc                              # 3. Clear cache
-  symfony.plugin.publish_assets           # 4. Publish plugin assets
   symfony.project.permissions             # 5. Fix project permissions
   if symfony_env_prod.eql?("prod")
     symfony.project.clear_controllers     # 6. Clear controllers in production environment
