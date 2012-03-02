@@ -2,7 +2,7 @@ require 'yaml'
 load Gem.find_files('capifony.rb').last.to_s
 
 # Dirs that need to remain the same between deploys (shared dirs)
-set :shared_children,   %w(log web/uploads)
+set :shared_children,   %w(log web/uploads config)
 
 # Files that need to remain the same between deploys
 set :shared_files,      %w(config/databases.yml)
